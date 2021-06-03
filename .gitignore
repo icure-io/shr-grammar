@@ -11,3 +11,4 @@ out
 /src/main/antlr/.antlr
 build/
 .settings/
+.idea/
