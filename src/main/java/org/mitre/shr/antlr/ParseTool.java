@@ -31,7 +31,7 @@ public class ParseTool {
 
     private static void parseDirectory(Path path) {
         try {
-            Files.walk(path).forEach(ParseTool::parseFile);
+            Files.walk(path).sorted().forEach(ParseTool::parseFile);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -56,17 +56,19 @@ public class ParseTool {
             tokens.fill();
             Parser parser = getParser(path.toString(), tokens);
             parser.setBuildParseTree(true);
+            ParserRuleContext tree;
             if (parser instanceof SHRDataElementParser) {
-                ((SHRDataElementParser) parser).doc();
+                tree = ((SHRDataElementParser) parser).doc();
             } else if (parser instanceof SHRValueSetParser) {
-                ((SHRValueSetParser) parser).doc();
+                tree = ((SHRValueSetParser) parser).doc();
             } else if (parser instanceof SHRMapParser) {
-                ((SHRMapParser) parser).doc();
+                tree = ((SHRMapParser) parser).doc();
             } else if (parser instanceof SHRContentProfileParser) {
-                ((SHRContentProfileParser) parser).doc();
+                tree = ((SHRContentProfileParser) parser).doc();
             } else {
                 throw new RuntimeException("Unrecognized Parser");
             }
+            System.out.println(tree.toStringTree(parser));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -74,22 +76,22 @@ public class ParseTool {
     }
 
     public static Lexer getLexer(String path, ANTLRInputStream input) {
-        if (path.endsWith("_vs.txt")) {
+        if (path.endsWith("-vs.txt")) {
             return new SHRValueSetLexer(input);
-        } else if (path.endsWith("_map.txt")) {
+        } else if (path.matches(".+-map(-(.+))?\\.txt")) {
             return new SHRMapLexer(input);
-        } else if (path.endsWith("_cp.txt")) {
+        } else if (path.endsWith("-cp.txt")) {
             return new SHRContentProfileLexer(input);
         }
         return new SHRDataElementLexer(input);
     }
 
     public static Parser getParser(String path, CommonTokenStream tokens) {
-        if (path.endsWith("_vs.txt")) {
+        if (path.endsWith("-vs.txt")) {
             return new SHRValueSetParser(tokens);
-        } else if (path.endsWith("_map.txt")) {
+        } else if (path.matches(".+-map(-(.+))?\\.txt")) {
             return new SHRMapParser(tokens);
-        } else if (path.endsWith("_cp.txt")) {
+        } else if (path.endsWith("-cp.txt")) {
             return new SHRContentProfileParser(tokens);
         }
         return new SHRDataElementParser(tokens);
